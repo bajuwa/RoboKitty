@@ -7,6 +7,7 @@ boolean radioOn = true;
 boolean loopSongs = false;
 
 //these are the notes and corresponding frequencies
+// FYI: the sets are CDEFGAB with numbers 12345678, example: ...A4-B4-C5-D5-E5-F5-G5-A5-B5-C6-D6.....
 int NOTE_B0 =  31;
 int NOTE_C1 =  33;
 int NOTE_CS1 = 35;
@@ -122,7 +123,7 @@ int thisNote = 0;
 
 // Playlist of songs to be played on the radio
 // For organizational purposes, keep each 'bar' of notes on separate lines
-int const NUMBER_OF_SONGS_IN_PLAYLIST = 1;
+int const NUMBER_OF_SONGS_IN_PLAYLIST = 2;
 int playlist[][2][max_song_size] = {
   // Mario Theme 
   {
@@ -182,6 +183,75 @@ int playlist[][2][max_song_size] = {
       
       END
     }
+  },
+  // Zelda - Turtle Rock
+  {
+    {
+      NOTE_B4, NOTE_CS5, NOTE_F5, NOTE_G5, NOTE_B4, NOTE_C5, NOTE_F5, NOTE_G5,
+      NOTE_B4, NOTE_CS5, NOTE_F5, NOTE_G5, NOTE_B4, NOTE_C5, NOTE_F5, NOTE_G5,
+      NOTE_A4, NOTE_B4, NOTE_DS5, NOTE_F5, NOTE_A4, NOTE_B4, NOTE_D5, NOTE_F5,
+      NOTE_A4, NOTE_B4, NOTE_DS5, NOTE_F5, NOTE_A4, NOTE_B4, NOTE_D5, NOTE_F5,
+      
+      NOTE_B4, NOTE_CS5, NOTE_F5, NOTE_G5, NOTE_B4, NOTE_C5, NOTE_F5, NOTE_G5,
+      NOTE_B4, NOTE_CS5, NOTE_F5, NOTE_G5, NOTE_B4, NOTE_C5, NOTE_F5, NOTE_G5,
+      NOTE_C5, NOTE_D5, NOTE_FS5, NOTE_GS5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_G5,
+      NOTE_C5, NOTE_D5, NOTE_FS5, NOTE_GS5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_G5,
+      
+      NOTE_CS5, NOTE_DS5, NOTE_FS5, NOTE_A5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_A5,
+      NOTE_CS5, NOTE_DS5, NOTE_FS5, NOTE_A5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_A5,
+      NOTE_CS5, NOTE_DS5, NOTE_FS5, NOTE_A5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_A5,
+      NOTE_CS5, NOTE_DS5, NOTE_FS5, NOTE_A5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_A5,
+      
+      NOTE_B4, NOTE_CS5, NOTE_F5, NOTE_G5, NOTE_B4, NOTE_C5, NOTE_F5, NOTE_G5,
+      NOTE_B4, NOTE_CS5, NOTE_F5, NOTE_G5, NOTE_B4, NOTE_C5, NOTE_F5, NOTE_G5,
+      NOTE_A4, NOTE_B4, NOTE_DS5, NOTE_F5, NOTE_A4, NOTE_B4, NOTE_D5, NOTE_F5,
+      NOTE_A4, NOTE_B4, NOTE_DS5, NOTE_F5, NOTE_A4, NOTE_B4, NOTE_D5, NOTE_F5,
+      
+      NOTE_B4, NOTE_CS5, NOTE_F5, NOTE_G5, NOTE_B4, NOTE_C5, NOTE_F5, NOTE_G5,
+      NOTE_B4, NOTE_CS5, NOTE_F5, NOTE_G5, NOTE_B4, NOTE_C5, NOTE_F5, NOTE_G5,
+      NOTE_C5, NOTE_D5, NOTE_FS5, NOTE_GS5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_G5,
+      NOTE_C5, NOTE_D5, NOTE_FS5, NOTE_GS5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_G5,
+      
+      NOTE_CS5, NOTE_DS5, NOTE_FS5, NOTE_A5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_A5,
+      NOTE_CS5, NOTE_DS5, NOTE_FS5, NOTE_A5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_A5,
+      NOTE_CS5, NOTE_DS5, NOTE_FS5, NOTE_A5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_A5,
+      NOTE_CS5, NOTE_DS5, NOTE_FS5, NOTE_A5, NOTE_C5, NOTE_D5, NOTE_F5, NOTE_A5,
+      
+      END
+    },
+    {
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      250, 250, 250, 250, 250, 250, 250, 250, 
+      
+      END
+    }
   }
 };
 
@@ -199,7 +269,7 @@ void loop() {
   // Check if the song is complete
   if (playlist[current_song][NOTES][thisNote] == END) {
     //temporary for my sanity
-    return;
+    //return;
     
     if (!loopSongs) {
       // advance to the next song if we aren't looping
