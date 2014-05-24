@@ -99,9 +99,10 @@ int NOTE_DS8 = 4978;
 
 // Marks the end of a song
 int const END =  0;
+int const REST =  1;
 
 // Max song size
-int const max_song_size = 42;
+int const max_song_size = 200;
 
 // Keep track of time passed in order to pace song
 long previousMillis = 0;
@@ -111,25 +112,74 @@ long interval = 0;
 // Stored Songs //
 // ------------ //
 // Each song is stored with two arrays, with elements of the arrays corresponding to eachother:
-// 1. The notes of the song (NOTES)
-// 2. The durations for each note (DURATIONS)
+// 2. The notes of the song (NOTES)
+// 3. The durations for each note in milliseconds (DURATIONS)
 int const NOTES = 0;
 int const DURATIONS = 1;
 int const INTERVAL_BETWEEN_SONGS = 1000;
 int current_song = 0;
 int thisNote = 0;
 
+// Playlist of songs to be played on the radio
+// For organizational purposes, keep each 'bar' of notes on separate lines
 int const NUMBER_OF_SONGS_IN_PLAYLIST = 1;
 int playlist[][2][max_song_size] = {
   // Mario Theme 
   {
     {
-      NOTE_E5, NOTE_E5, NOTE_E5, NOTE_C5, NOTE_E5, NOTE_G5, NOTE_FS4, NOTE_C5, 
-      NOTE_FS4, NOTE_E4, NOTE_A4, NOTE_B4, NOTE_A4, NOTE_A4, NOTE_FS4, NOTE_E5, 
+      NOTE_E5, NOTE_E5, REST, NOTE_E5, 
+      REST, NOTE_C5, NOTE_E5, REST, 
+      NOTE_G5, REST, 
+      NOTE_G4, REST, 
+      
+      NOTE_C5, REST, NOTE_G4, 
+      REST, NOTE_E4, REST, 
+      REST, NOTE_A4, REST, NOTE_B4,
+      REST, NOTE_B4, NOTE_A4, REST, 
+      
+      NOTE_G4, NOTE_E5, NOTE_G5,
+      NOTE_A5, REST, NOTE_F5, NOTE_G5,
+      REST, NOTE_E5, REST, NOTE_C5,
+      NOTE_D5, NOTE_B4, REST,
+      
+      NOTE_C5, REST, NOTE_G4, 
+      REST, NOTE_E4, REST, 
+      REST, NOTE_A4, REST, NOTE_B4,
+      REST, NOTE_B4, NOTE_A4, REST, 
+      
+      NOTE_G4, NOTE_E5, NOTE_G5,
+      NOTE_A5, REST, NOTE_F5, NOTE_G5,
+      REST, NOTE_E5, REST, NOTE_C5,
+      NOTE_D5, NOTE_B4, REST,
+      
       END
     },
     {
-      8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 16, 8, 8, 8, 16, 
+      150, 150, 150, 150, 
+      150, 150, 150, 150, 
+      150, 450, 
+      150, 450, 
+      
+      150, 300, 150, 
+      300, 150, 150, 
+      150, 150, 150, 150, 
+      150, 150, 150, 150, 
+      
+      200, 200, 200, 
+      150, 150, 150, 150, 
+      150, 150, 150, 150, 
+      150, 150, 300, 
+      
+      150, 150, 150, 150, 
+      300, 150, 150, 
+      150, 150, 150, 150, 
+      150, 150, 150, 150, 
+      
+      200, 200, 200, 
+      150, 150, 150, 150, 
+      150, 150, 150, 150, 
+      150, 150, 300, 
+      
       END
     }
   }
@@ -139,7 +189,6 @@ void setup() {
   Serial.begin(9600); // set up Serial library at 9600 bps
   previousMillis = millis();
   Serial.println("Starting");
-  Serial.println(sizeof(playlist));
 }
 
 
@@ -149,6 +198,9 @@ void loop() {
   
   // Check if the song is complete
   if (playlist[current_song][NOTES][thisNote] == END) {
+    //temporary for my sanity
+    return;
+    
     if (!loopSongs) {
       // advance to the next song if we aren't looping
       current_song = (current_song+1) % NUMBER_OF_SONGS_IN_PLAYLIST;
@@ -166,15 +218,17 @@ void loop() {
   if(currentMillis - previousMillis > interval) {
     previousMillis = currentMillis;   
   
-    // to calculate the note duration, take one second
-    // divided by the note type.
-    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int note_duration = 1000/playlist[current_song][DURATIONS][thisNote];
-    tone(PIN_PEZO, playlist[current_song][NOTES][thisNote],note_duration);
-
-    // to distinguish the notes, set a minimum time between them.
-    // the note's duration + 30% seems to work well:
-    interval = note_duration * 1.30;
+    // If the current note isn't a 'rest' beat, 
+    // then play the note for the alloted duration (milliseconds)
+    if (playlist[current_song][NOTES][thisNote] != REST) {
+      tone(PIN_PEZO, 
+           playlist[current_song][NOTES][thisNote],
+           playlist[current_song][DURATIONS][thisNote]);
+    }
+    
+    // Set how long to wait until next note 
+    // (namely the length of the currently playing note)
+    interval = playlist[current_song][DURATIONS][thisNote];
     
     // go to next note
     thisNote++;
