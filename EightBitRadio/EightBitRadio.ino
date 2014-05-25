@@ -7,9 +7,11 @@ int PIN_PEZO = 8;
 // RADIO SETTINGS
 boolean radioOn = true;
 boolean loopSingleSong = false;
+boolean loopPlaylist = false;
 
 // Notes frequencies
 // FYI: the sets are CDEFGAB with numbers 12345678, example: ...A4-B4-C5-D5-E5-F5-G5-A5-B5-C6-D6.....
+/*
 int const NOTE_C1 =  33;
 int const NOTE_CS1 = 35;
 int const NOTE_D1 =  37;
@@ -98,6 +100,7 @@ int const NOTE_C8 =  4186;
 int const NOTE_CS8 = 4435;
 int const NOTE_D8 =  4699;
 int const NOTE_DS8 = 4978;
+*/
 
 // Marks the end of a song
 int const END =  0;
@@ -105,6 +108,7 @@ int const REST =  1;
 
 // Max song size
 int const max_song_size = 200;
+int const max_songs_per_playlist = 5;
 
 // Keep track of time passed in order to pace song
 long previousMillis = 0;
@@ -125,6 +129,8 @@ int thisNote = 0;
 // Playlist of songs to be played on the radio
 // For organizational purposes, keep each 'bar' of notes on separate lines
 int const NUMBER_OF_SONGS_IN_PLAYLIST = 2;
+Note* playlist[][max_song_size] = {{}};
+/*
 Note* playlist[][max_song_size] = {
   // Mario Theme 
   {
@@ -188,11 +194,25 @@ Note* playlist[][max_song_size] = {
     new Note(NOTE_CS5, 250), new Note(NOTE_DS5, 250), new Note(NOTE_FS5, 250), new Note(NOTE_A5, 250), new Note(NOTE_C5, 250), new Note(NOTE_D5, 250), new Note(NOTE_F5, 250), new Note(NOTE_A5, 250),
   }
 };
+*/
 
 void setup() {
   Serial.begin(9600); // set up Serial library at 9600 bps
   previousMillis = millis();
-  Serial.println("Starting");
+  
+  // Take all present text files and convert them to usable songs
+  Serial.println("Parsing text file for song");
+  char pseudoFileText[] = "659 150-659 150-0 150-659 150-0 150-523 150-659 150-0 150-784 150-0 450-392 150-0 450-523 150-0 300-392 150-0 300-330 150-0 150-0 150-440 150-0 150-494 150-0 150-494 150-440 150-0 150-392 200-659 200-784 200-880 150-0 150-698 150-784 150-0 150-659 150-0 150-523 150-587 150-494 150-0 300-523 150-0 300-392 150-0 300-330 150-0 150-0 150-440 150-0 150-494 150-0 150-494 150-440 150-0 150-392 200-659 200-784 200-880 150-0 150-698 150-784 150-0 150-659 150-0 150-523 150-587 150-494 150-0 300";
+  char separators[] = " -";
+  char* noteFreq = strtok(pseudoFileText, separators);
+  char* noteDur = strtok(NULL, separators);
+  unsigned long i = 0;
+  while (i < max_song_size && noteFreq != NULL && noteDur != NULL) {
+    Serial.println(i);
+    playlist[0][i++] = new Note(atoi(noteFreq), atoi(noteDur));
+    noteFreq = strtok(NULL, separators);
+    noteDur = strtok(NULL, separators);
+  }
 }
 
 
@@ -204,6 +224,7 @@ void loop() {
   if (!playlist[current_song][thisNote]) {
     if (!loopSingleSong) {
       // advance to the next song if we aren't looping
+      if (!loopPlaylist && current_song+1 >NUMBER_OF_SONGS_IN_PLAYLIST) return;
       current_song = (current_song+1) % NUMBER_OF_SONGS_IN_PLAYLIST;
     }
     
@@ -221,11 +242,9 @@ void loop() {
   
     // If the current note isn't a 'rest' beat, 
     // then play the note for the alloted duration (milliseconds)
-    if (playlist[current_song][thisNote]->getFrequency() != REST) {
-      tone(PIN_PEZO, 
-           playlist[current_song][thisNote]->getFrequency(),
-           playlist[current_song][thisNote]->getDuration());
-    }
+    tone(PIN_PEZO, 
+         playlist[current_song][thisNote]->getFrequency(),
+         playlist[current_song][thisNote]->getDuration());
     
     // Set how long to wait until next note 
     // (namely the length of the currently playing note)
@@ -235,3 +254,6 @@ void loop() {
     thisNote++;
   }
 }
+
+
+
