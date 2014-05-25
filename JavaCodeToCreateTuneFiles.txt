@@ -1,0 +1,110 @@
+import java.util.HashMap;
+import java.util.Map;
+
+public class HelloWorld{
+                            
+    private static final Map<String, String> noteNameToFrequencyMap;
+    static
+    {
+        noteNameToFrequencyMap = new HashMap<String, String>();
+        noteNameToFrequencyMap.put("C1", "33");
+        noteNameToFrequencyMap.put("CS1", "35");
+        noteNameToFrequencyMap.put("D1", "37");
+        noteNameToFrequencyMap.put("DS1", "39");
+        noteNameToFrequencyMap.put("E1", "41");
+        noteNameToFrequencyMap.put("F1", "44");
+        noteNameToFrequencyMap.put("FS1", "46");
+        noteNameToFrequencyMap.put("G1", "49");
+        noteNameToFrequencyMap.put("GS1", "52");
+        noteNameToFrequencyMap.put("A1", "55");
+        noteNameToFrequencyMap.put("AS1", "58");
+        noteNameToFrequencyMap.put("B1", "62");
+        noteNameToFrequencyMap.put("C2", "65");
+        noteNameToFrequencyMap.put("CS2", "69");
+        noteNameToFrequencyMap.put("D2", "73");
+        noteNameToFrequencyMap.put("DS2", "78");
+        noteNameToFrequencyMap.put("E2", "82");
+        noteNameToFrequencyMap.put("F2", "87");
+        noteNameToFrequencyMap.put("FS2", "93");
+        noteNameToFrequencyMap.put("G2", "98");
+        noteNameToFrequencyMap.put("GS2", "104");
+        noteNameToFrequencyMap.put("A2", "110");
+        noteNameToFrequencyMap.put("AS2", "117");
+        noteNameToFrequencyMap.put("B2", "123");
+        noteNameToFrequencyMap.put("C3", "131");
+        noteNameToFrequencyMap.put("CS3", "139");
+        noteNameToFrequencyMap.put("D3", "147");
+        noteNameToFrequencyMap.put("DS3", "156");
+        noteNameToFrequencyMap.put("E3", "165");
+        noteNameToFrequencyMap.put("F3", "175");
+        noteNameToFrequencyMap.put("FS3", "185");
+        noteNameToFrequencyMap.put("G3", "196");
+        noteNameToFrequencyMap.put("GS3", "208");
+        noteNameToFrequencyMap.put("A3", "220");
+        noteNameToFrequencyMap.put("AS3", "233");
+        noteNameToFrequencyMap.put("B3", "247");
+        noteNameToFrequencyMap.put("C4", "262");
+        noteNameToFrequencyMap.put("CS4", "277");
+        noteNameToFrequencyMap.put("D4", "294");
+        noteNameToFrequencyMap.put("DS4", "311");
+        noteNameToFrequencyMap.put("E4", "330");
+        noteNameToFrequencyMap.put("F4", "349");
+        noteNameToFrequencyMap.put("FS4", "370");
+        noteNameToFrequencyMap.put("G4", "392");
+        noteNameToFrequencyMap.put("GS4", "415");
+        noteNameToFrequencyMap.put("A4", "440");
+        noteNameToFrequencyMap.put("AS4", "466");
+        noteNameToFrequencyMap.put("B4", "494");
+        noteNameToFrequencyMap.put("C5", "523");
+        noteNameToFrequencyMap.put("CS5", "554");
+        noteNameToFrequencyMap.put("D5", "587");
+        noteNameToFrequencyMap.put("DS5", "622");
+        noteNameToFrequencyMap.put("E5", "659");
+        noteNameToFrequencyMap.put("F5", "698");
+        noteNameToFrequencyMap.put("FS5", "740");
+        noteNameToFrequencyMap.put("G5", "784");
+        noteNameToFrequencyMap.put("GS5", "831");
+        noteNameToFrequencyMap.put("A5", "880");
+        noteNameToFrequencyMap.put("AS5", "932");
+        noteNameToFrequencyMap.put("B5", "988");
+        noteNameToFrequencyMap.put("C6", "1047");
+        noteNameToFrequencyMap.put("CS6", "1109");
+        noteNameToFrequencyMap.put("D6", "1175");
+        noteNameToFrequencyMap.put("DS6", "1245");
+        noteNameToFrequencyMap.put("E6", "1319");
+        noteNameToFrequencyMap.put("F6", "1397");
+        noteNameToFrequencyMap.put("FS6", "1480");
+        noteNameToFrequencyMap.put("G6", "1568");
+        noteNameToFrequencyMap.put("GS6", "1661");
+        noteNameToFrequencyMap.put("A6", "1760");
+        noteNameToFrequencyMap.put("AS6", "1865");
+        noteNameToFrequencyMap.put("B6", "1976");
+        noteNameToFrequencyMap.put("C7", "2093");
+        noteNameToFrequencyMap.put("CS7", "2217");
+        noteNameToFrequencyMap.put("D7", "2349");
+        noteNameToFrequencyMap.put("DS7", "2489");
+        noteNameToFrequencyMap.put("E7", "2637");
+        noteNameToFrequencyMap.put("F7", "2794");
+        noteNameToFrequencyMap.put("FS7", "2960");
+        noteNameToFrequencyMap.put("G7", "3136");
+        noteNameToFrequencyMap.put("GS7", "3322");
+        noteNameToFrequencyMap.put("A7", "3520");
+        noteNameToFrequencyMap.put("AS7", "3729");
+        noteNameToFrequencyMap.put("B7", "3951");
+        noteNameToFrequencyMap.put("C8", "4186");
+        noteNameToFrequencyMap.put("CS8", "4435");
+        noteNameToFrequencyMap.put("D8", "4699");
+        noteNameToFrequencyMap.put("DS8", "4978");
+        noteNameToFrequencyMap.put("REST", "REST");
+    }
+    
+     public static void main(String []args){
+        String pseudoTextFile = new String("E5 150-E5 150-REST 150-E5 150-REST 150-C5 150-E5 150-REST 150-G5 150-REST 450-G4 150-REST 450-C5 150-REST 300-G4 150-REST 300-E4 150-REST 150-REST 150-A4 150-REST 150-B4 150-REST 150-B4 150-A4 150-REST 150-G4 200-E5 200-G5 200-A5 150-REST 150-F5 150-G5 150-REST 150-E5 150-REST 150-C5 150-D5 150-B4 150-REST 300-C5 150-REST 300-G4 150-REST 300-E4 150-REST 150-REST 150-A4 150-REST 150-B4 150-REST 150-B4 150-A4 150-REST 150-G4 200-E5 200-G5 200-A5 150-REST 150-F5 150-G5 150-REST 150-E5 150-REST 150-C5 150-D5 150-B4 150-REST 300");
+        String[] note;
+        String[] brokenByNewlines = pseudoTextFile.split("-");
+        for (int i=0; i<brokenByNewlines.length; i++) {
+            note = brokenByNewlines[i].split(" ");
+            System.out.println(noteNameToFrequencyMap.get(note[0]) + " " + note[1]);
+        }
+     }
+}
