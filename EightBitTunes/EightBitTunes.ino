@@ -27,22 +27,22 @@ void setup() {
 bool test = true;
 int i=0;
 void loop() {
-  if (i++ == 80000 && test) {
+  if (millis() > 2000 && test) {
     Serial.println("loading sound");
     test = false;
-    soundManager->loadTune("1000 200-1300 200-1000 200-1300 200");  
+    soundManager->loadSound(SAD);  
   }
-
-  if (radioOn) {
-    // only consider playing music if the radio is 'on'
-    songManager->playTune(loopSingleSong);
-  } 
-  else {
-    soundManager->playTune(false);
-  }
+  
+  manageTunes();
 }
 
 void manageTunes() {
+  if (radioOn) {
+    // only consider playing music if the radio is 'on'
+    songManager->playTune(loopSingleSong);
+  } else {
+    soundManager->playTune(false);
+  }
 }
 
 
