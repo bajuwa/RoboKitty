@@ -1,5 +1,8 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class HelloWorld{
                             
@@ -95,16 +98,25 @@ public class HelloWorld{
         noteNameToFrequencyMap.put("CS8", "4435");
         noteNameToFrequencyMap.put("D8", "4699");
         noteNameToFrequencyMap.put("DS8", "4978");
-        noteNameToFrequencyMap.put("REST", "REST");
+        noteNameToFrequencyMap.put("REST", "0");
     }
     
      public static void main(String []args){
-        String pseudoTextFile = new String("E5 150-E5 150-REST 150-E5 150-REST 150-C5 150-E5 150-REST 150-G5 150-REST 450-G4 150-REST 450-C5 150-REST 300-G4 150-REST 300-E4 150-REST 150-REST 150-A4 150-REST 150-B4 150-REST 150-B4 150-A4 150-REST 150-G4 200-E5 200-G5 200-A5 150-REST 150-F5 150-G5 150-REST 150-E5 150-REST 150-C5 150-D5 150-B4 150-REST 300-C5 150-REST 300-G4 150-REST 300-E4 150-REST 150-REST 150-A4 150-REST 150-B4 150-REST 150-B4 150-A4 150-REST 150-G4 200-E5 200-G5 200-A5 150-REST 150-F5 150-G5 150-REST 150-E5 150-REST 150-C5 150-D5 150-B4 150-REST 300");
-        String[] note;
-        String[] brokenByNewlines = pseudoTextFile.split("-");
-        for (int i=0; i<brokenByNewlines.length; i++) {
-            note = brokenByNewlines[i].split(" ");
-            System.out.println(noteNameToFrequencyMap.get(note[0]) + " " + note[1]);
+        String defaultDuration = args[0];
+        String[] noteAndDur;
+        String note;
+        String dur;
+        String sCurrentLine;
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("input.txt"));
+            while ((sCurrentLine = br.readLine()) != null) {
+                noteAndDur = sCurrentLine.split(",");
+                note = noteAndDur[0].trim().toUpperCase();
+                dur = (noteAndDur.length < 2 || noteAndDur[1].trim().isEmpty()) ? defaultDuration : noteAndDur[1].trim();
+                System.out.println(noteNameToFrequencyMap.get(note) + " " + dur);
+            }
+        } catch (IOException e) {
+            // do nothing
         }
      }
 }
