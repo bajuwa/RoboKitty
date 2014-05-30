@@ -110,6 +110,10 @@ public class HelloWorld{
         try {
             BufferedReader br = new BufferedReader(new FileReader("input.txt"));
             while ((sCurrentLine = br.readLine()) != null) {
+                if (sCurrentLine.trim().isEmpty()) {
+                    System.out.println("");
+                    continue;
+                }
                 noteAndDur = sCurrentLine.split(",");
                 note = noteAndDur[0].trim().toUpperCase();
                 dur = (noteAndDur.length < 2 || noteAndDur[1].trim().isEmpty()) ? defaultDuration : noteAndDur[1].trim();

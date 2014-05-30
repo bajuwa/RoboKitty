@@ -2,6 +2,7 @@ RoboKitty
 =========
 
 Arduino UNO codebase for a robotic kitty. <br>
+Required libraries: Standardcplusplus<br>
 
 Current Modules/Features
 
