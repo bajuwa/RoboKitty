@@ -13,12 +13,13 @@ Current Modules/Features
     <td>Description</td>
   </tr>
   <tr>
-    <td>8bit Radio</td>
+    <td>8bit Tunes</td>
     <td>EightBitRadio</td>
     <td>1 Pezo</td>
     <td>
-      Plays 8bit tunes that are hardcoded into the module.<br>
-      Some sample songs are provided in txt file format.<br>
+      Plays 8bit tunes or sounds that are hardcoded into the module.<br>
+      Some sample tunes are provided in txt file format.<br>
+      Some hardcoded sounds are also available to be played when radio is off.<br>
       <br>
       Settings that can be changed from within module code:<br>
       - On/Off: turns the radio on/off.  When radio is on, no sounds other than hardcoded music can be played.<br>
