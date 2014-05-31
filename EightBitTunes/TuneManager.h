@@ -27,7 +27,7 @@ class TuneManager {
   private:
     list<Note*> tune;
     char** sounds;
-    void addNotesToTune(char* encodedNotes);
+    void addNotesToTune(char* encodedNotes, int numOfNotesToAdd);
 };
 
 #endif
