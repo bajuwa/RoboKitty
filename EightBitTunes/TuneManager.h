@@ -5,11 +5,11 @@
 #include <system_configuration.h>
 #include <unwind-cxx.h>
 #include <utility.h>
-#include <vector>
+#include <list>
 #include "Note.h"
 #include "Arduino.h"
 
-using std::vector;
+using std::list;
 
 typedef enum {
   HAPPY,
@@ -22,12 +22,12 @@ class TuneManager {
   public:
     TuneManager(); 
     void loadTune(char tune[]);
-    void playTune(bool loopTune);
+    void playTune();
     void loadSound(SOUNDS sound);
   private:
-    vector<Note*> tune;
+    list<Note*> tune;
     char** sounds;
-    void playNote(int freq, int dur);
+    void addNotesToTune(char* encodedNotes);
 };
 
 #endif

@@ -8,8 +8,7 @@ int const PIN_PEZO = 8;
 char* encodedTune;
 int MIN_NOTE_BUFFER = 5;
 int MAX_NOTE_BUFFER = 10;
-vector<Note*> tune;
-int noteIndex = 0;
+list<Note*> tune;
 
 // Timing
 long previousMillis = 0;
@@ -17,26 +16,7 @@ long interval = 0;
 
 TuneManager::TuneManager() {
   previousMillis = millis();
-  tune.push_back(NULL);
-  Serial.println(tune.size());
-}
-
-void TuneManager::playNote(int freq, int dur) {
-  // play the song by iterating over the notes at given intervals:
-  unsigned long currentMillis = millis();
-  if(currentMillis - previousMillis > interval) {
-    previousMillis = currentMillis;   
-  
-    // If the current note isn't a 'rest' beat, 
-    // then play the note for the alloted duration (milliseconds)
-    tone(PIN_PEZO, freq, dur);
-    
-    // Set how long to wait until next note 
-    // (namely the length of the currently playing note)
-    interval = dur;
-    
-    noteIndex++;
-  }  
+  tune.push_back(new Note(0,0));
 }
 
 int firstIndexOf(char* arr, char ch) {
@@ -46,53 +26,71 @@ int firstIndexOf(char* arr, char ch) {
   return 0;
 }
 
-void addNotesToTune(char* encodedNotes) {
+void TuneManager::addNotesToTune(char* encodedNotes) {
     char separators[] = " -";
-    char* noteFreq = strtok(encodedNotes, separators);
+    char* noteFreq = strtok(NULL, separators);
     char* noteDur = strtok(NULL, separators);
     unsigned int i = 0;
     while (tune.size() < MAX_NOTE_BUFFER && noteFreq != NULL && noteDur != NULL) {
-      //Serial.println("loading next note");
       // Add our decoded note to the ongoing tune
       tune.push_back( new Note(atoi(noteFreq), atoi(noteDur)) );
       // Remove the encoded note from the encoded tune
-      int numOfRemovableChars = firstIndexOf(encodedNotes, '-')+1;
-      memcpy( encodedNotes, encodedNotes + numOfRemovableChars, (strlen(encodedNotes) - numOfRemovableChars) * sizeof(char) );
+      int numOfRemovableChars = firstIndexOf(encodedNotes, '-');
       // Get the next freq and duration
-      noteFreq = strtok(encodedNotes, separators);
+      noteFreq = strtok(NULL, separators);
       noteDur = strtok(NULL, separators);
     }
-    //Serial.println("done loading notes into buffer");
-    // Add a null terminator if this is the last note
-    if (strlen(encodedNotes) == 0 && tune[tune.size()] != NULL) {
-      Serial.println("adding null terminator");
-      tune.push_back( NULL );
-    }  
+    
+    // Add blanknotes if the end of song has been reached
+    if (noteFreq == NULL || noteDur == NULL) {
+      while (tune.size() < MAX_NOTE_BUFFER) {
+        tune.push_back( new Note(0,0) );
+      }
+    }
 }
 
-void TuneManager::playTune(bool loopTune) {
+void printList(list<Note*> lst) {
+  for (list<Note*>::const_iterator iterator = lst.begin(), end = lst.end(); iterator != end; ++iterator) {
+      Serial.print((*iterator)->getFrequency());
+      Serial.print(", ");
+  }
+  Serial.println("");
+}
+
+//BUG: this is constantly calling addNotesToTune
+void TuneManager::playTune() {
+  // A note with 0 duration marks the end of the song
+  if (tune.front()->getDuration() == 0) return;
+  
+  // TEST
+  printList(tune);
+  
   // Check to see if we have a sufficient number of notes loaded from the encoded tune
-  if (tune.size() < MIN_NOTE_BUFFER && strlen(encodedTune) > 0) {
+  if (tune.size() < MIN_NOTE_BUFFER) {
     addNotesToTune(encodedTune);
   }
-  // Play the currently loaded sound
-  if (tune[noteIndex]) {
-    playNote(tune[noteIndex]->getFrequency(), 
-             tune[noteIndex]->getDuration());
-  } else {
-    if (loopTune) {
-      // Make sure we reset the current note
-      noteIndex = 0;
-    } else {
-      // Once complete, remove it from memory
-      tune.clear();
-      tune.push_back(NULL);
-    }
+  
+  // play the song by iterating over the notes at given intervals:
+  unsigned long currentMillis = millis();
+  if(currentMillis - previousMillis > interval) {
+    previousMillis = currentMillis;   
+  
+    // If the current note isn't a 'rest' beat, 
+    // then play the note for the alloted duration (milliseconds)
+    tone(PIN_PEZO, tune.front()->getFrequency(), tune.front()->getDuration());
+    
+    // Set how long to wait until next note 
+    // (namely the length of the currently playing note)
+    interval = tune.front()->getDuration();
+    
+    // Remove the note we just played so it doesn't repeat
+    tune.pop_front();
   }  
 }
 
 void TuneManager::loadTune(char tuneToLoad[]) {
   encodedTune = tuneToLoad;
+  strtok(encodedTune, "-");
   tune.clear();
   addNotesToTune(encodedTune);
 }
