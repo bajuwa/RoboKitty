@@ -1,0 +1,23 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class HelloWorld{
+    
+     public static void main(String []args){
+        String sCurrentLine;
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("input.txt"));
+            while ((sCurrentLine = br.readLine()) != null) {
+                if (sCurrentLine.trim().isEmpty()) {
+                    continue;
+                }
+                System.out.print(sCurrentLine + "-");
+            }
+        } catch (IOException e) {
+            // do nothing
+        }
+     }
+}
