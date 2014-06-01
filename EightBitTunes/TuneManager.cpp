@@ -45,16 +45,18 @@ void TuneManager::addNotesToTune(int numOfNotesToAdd) {
     }
 }
 
+/*
 int freeRam () {
   extern int __heap_start, *__brkval; 
   int v; 
   return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
 }
+*/
 
 void TuneManager::playTune() {
   // A note with 0 duration marks the end of the song
   if (currentNoteIndex == loadableNoteIndex) return;
-  Serial.println(freeRam());
+  //Serial.println(freeRam());
   
   // play the song by iterating over the notes at given intervals:
   unsigned long currentMillis = millis();
