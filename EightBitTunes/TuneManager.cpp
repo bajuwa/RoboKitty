@@ -68,8 +68,8 @@ void TuneManager::playTune() {
     tone(PIN_PEZO, tuneFreq[currentNoteIndex], tuneDur[currentNoteIndex]);
     
     // Set how long to wait until next note 
-    // (namely the length of the currently playing note)
-    interval = tuneDur[currentNoteIndex];
+    // (namely the length of the currently playing note plus some rest time to distinguish between repeated notes)
+    interval = tuneDur[currentNoteIndex] + 10;
     
     // Remove the note we just played so it doesn't repeat
     currentNoteIndex = (currentNoteIndex+1)%MAX_NOTE_BUFFER;
