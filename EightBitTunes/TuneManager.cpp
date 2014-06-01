@@ -7,7 +7,6 @@ int const PIN_PEZO = 8;
 
 // Sound management...
 char* encodedTune;
-int const MAX_NOTE_BUFFER = 25;
 
 int currentNoteIndex = 0;
 int loadableNoteIndex = 0;
@@ -37,21 +36,9 @@ void TuneManager::addNotesToTune(int numOfNotesToAdd) {
       // If we have reached the end of the encoded song, strtok will return nulls
       if (noteFreq != NULL && noteDur != NULL) {
         // Otherwise, add our decoded note to the ongoing tune
-        //Serial.println(F("adding next note"));
-        // BUG BUG BUG: printing atoi(notes) gives appropriate results but printing tune[] directly after setting gives dur-dur pairs, not freq-dur pairs
-        //              aka theres some issue where both arrays are pointing to the same locations
         tuneFreq[loadableNoteIndex] = atoi(noteFreq);
         tuneDur[loadableNoteIndex] = atoi(noteDur);
         
-    // use these serial prints for text comparison with original encodedTunes to find missing notes due to buffering
-    //Serial.print(atoi(noteFreq));
-    //Serial.print(" ");
-    //Serial.print(atoi(noteDur));
-    //Serial.print("-");
-    Serial.print(tuneFreq[loadableNoteIndex]);
-    Serial.print(" ");
-    Serial.print(tuneDur[loadableNoteIndex]);
-    Serial.print("-");
         loadableNoteIndex = (loadableNoteIndex+1)%MAX_NOTE_BUFFER;
       }
       
@@ -67,11 +54,7 @@ int freeRam () {
 void TuneManager::playTune() {
   // A note with 0 duration marks the end of the song
   if (currentNoteIndex == loadableNoteIndex) return;
-  //Serial.println(freeRam());
-  //Serial.print(F("loaded index: "));
-  //Serial.println(loadableNoteIndex);
-  //Serial.print(F("current index: "));
-  //Serial.println(currentNoteIndex);
+  Serial.println(freeRam());
   
   // play the song by iterating over the notes at given intervals:
   unsigned long currentMillis = millis();
@@ -98,14 +81,12 @@ void TuneManager::playTune() {
 void TuneManager::loadTune(char tuneToLoad[]) {
   encodedTune = tuneToLoad;
   strtok(encodedTune, "-");
-  Serial.println(F("loaded tune"));
   
   // In order to 'clear' the last song, reset the indexes and add notes again
   loadableNoteIndex = 0;
   currentNoteIndex = 0;
   
   addNotesToTune(MAX_NOTE_BUFFER);
-  Serial.println(F("added initial set of buffered notes"));
 }
 
 void TuneManager::loadSound(SOUNDS sound) {

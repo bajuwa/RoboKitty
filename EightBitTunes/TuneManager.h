@@ -3,6 +3,8 @@
 
 #include "Arduino.h"
 
+static const int MAX_NOTE_BUFFER = 25;
+
 typedef enum {
   HAPPY,
   SAD,
@@ -17,8 +19,8 @@ class TuneManager {
     void playTune();
     void loadSound(SOUNDS sound);
   private:
-    int tuneFreq[];
-    int tuneDur[];
+    int tuneFreq[MAX_NOTE_BUFFER];
+    int tuneDur[MAX_NOTE_BUFFER];
     char** sounds;
     void addNotesToTune(int numOfNotesToAdd);
 };
