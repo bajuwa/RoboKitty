@@ -18,13 +18,12 @@ Current Modules/Features
     <td>EightBitTunes</td>
     <td>1 Pezo</td>
     <td>
-      Plays 8bit tunes or sounds that are hardcoded into the module.<br>
+      Plays 8bit tunes that are loaded as .txt files on to a SD Card, following a specific format.<br>
       Some sample tunes are provided in txt file format, as well as some java scripts that can help convert manually transposed songs in to proper frequency/duration format.<br>
-      Some hardcoded sounds are also available to be played when radio is off.<br>
       <br>
       Settings that can be changed from within module code:<br>
-      - On/Off: turns the radio on/off.  When radio is on, no sounds other than hardcoded music can be played.<br>
-      - Loop: whether a particular tune will replay after finishing (if not, continues to next song in playlist)<br>
+      - On/Off: turns the radio on/off.<br>
+      - Loop: whether a particular tune will replay after finishing (if not, continues to next song in playlist) [Temporarily disabled]<br>
     </td>
   </tr>
   <tr>
