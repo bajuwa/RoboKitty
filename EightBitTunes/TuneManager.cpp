@@ -24,7 +24,7 @@ unsigned long previousMillis = 0;
 unsigned long interval = 0;
 
 // ABC Notation
-boolean inHeader = true;
+boolean inBrackets = true;
 boolean sharpIndicator = false;
 boolean flatIndicator = false;
 float meterValue = 1.0f;
@@ -121,7 +121,6 @@ void getNextNote(File file, int* freq, int* dur) {
         // Currently only supports default Key C major
         // Marks the end of the official header, so scroll forward til endline
         while (inputChar != '\n' && inputChar != ']') inputChar = file.read();
-        inHeader = false;
         Serial.println(F("Finished handling header: K - Key"));
         break;
       
@@ -220,9 +219,16 @@ void getNextNote(File file, int* freq, int* dur) {
         Serial.println(F("Finished handling header: L - Note Length"));
         break;
         
+      case '[':
+        inBrackets = true;
+        Serial.println(F("Entering [] Brackets"));
+        inputChar = file.read();
+        break;
+        
       case ']':
-        inHeader = false;
-        Serial.println(F("Finished handlings all headers"));
+        inBrackets = false;
+        Serial.println(F("Exiting [] Brackets"));
+        inputChar = file.read();
         break;
       
       default:
@@ -322,6 +328,14 @@ void getNextNote(File file, int* freq, int* dur) {
         //Serial.print(F("Note Dur: "));
         //Serial.print(*dur);
         
+        // If we are in a set of brackets, that means the music wants to
+        // play multiple notes at once, which the arduino piezo does not support
+        // So we must escape all remaining notes until the end brack
+        if (inBrackets) {
+          Serial.println(F("Ignoring rest of notes in stem..."));
+          while (inputChar != ']') inputChar = file.read();
+        }
+        
         // Make sure to return once we have our next valid note
         return;
     }
@@ -361,7 +375,7 @@ void TuneManager::addNotesToTune(int numOfNotesToAdd) {
     } 
     // If we have reached the end of the song, the file will no longer be available
     // Close it and return it to null so that a new tune file can be played
-    Serial.println(F("Reached end of tune, closing file"));
+    //Serial.println(F("Reached end of tune, closing file"));
     tuneFile.close();
     break;
   }
@@ -379,14 +393,14 @@ void TuneManager::playTunes() {
   // Make sure we have a song to play
   if (!tuneFile) {
     // Proceed to the next song if it exists
-    Serial.println(F("opening next file"));
+    //Serial.println(F("opening next file"));
     tuneFile = root.openNextFile();
     // If we got a new tune, load up some notes from it
     if (tuneFile) {
       Serial.print(F("Loaded next tune file: "));
       Serial.println(tuneFile.name());
       // Reset all data to default for new tune
-      inHeader = true;
+      inBrackets = true;
       inputChar = ' ';
       sharpIndicator = false;
       flatIndicator = false;
