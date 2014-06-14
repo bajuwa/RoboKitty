@@ -1,5 +1,5 @@
 #include <SD.h>
-#include <MemoryFree.h>
+//#include <MemoryFree.h>
 #include "TuneManager.h"
 
 // HARDWARE CONSTANTS
@@ -8,19 +8,64 @@ int const PIN_PEZO = 8;
 int const PIN_CS = 4;
 int const PIN_HARDWARE_SS = 10;
 
-// Sound management...
+// File information
 File tuneFile;
 File root;
-int const MAX_CHAR_PER_LINE = 25;
+char inputChar = ' ';
 
+// Buffered note array
 int readNoteIndex = 0;
 int writeNoteIndex = 0;
 int tuneFreq[MAX_NOTE_BUFFER];
 int tuneDur[MAX_NOTE_BUFFER];
 
 // Timing
-long previousMillis = 0;
-long interval = 0;
+unsigned long previousMillis = 0;
+unsigned long interval = 0;
+
+// ABC Notation
+boolean inHeader = true;
+boolean sharpIndicator = false;
+boolean flatIndicator = false;
+float meterValue = 1.0f;
+float defaultNoteLength = 0.125f;
+int defaultNoteDuration = 120;
+
+// Extra information about ABC Notation:
+// Middle C is represented as C 
+// Note range: C,D,E,F,G,A,B,CDEFGABcdefgabc'd'e'f'g'a'b' (first index)
+// ** If the note is 'sharp', then look as the second index
+int frequencies[][2] = {
+    {131, 139}, //C,
+    {147, 156}, //D,
+    {165, 165}, //E, (no sharp)
+    {175, 185}, //F,
+    {196, 208}, //G,
+    {220, 233}, //A,
+    {247, 247}, //B, (no sharp)
+    {262, 277}, //C
+    {294, 311}, //D
+    {330, 330}, //E (no sharp)
+    {349, 370}, //F
+    {392, 415}, //G
+    {440, 466}, //A
+    {494, 494}, //B (no sharp)
+    {523, 554}, //c
+    {587, 622}, //d
+    {659, 659}, //e (no sharp)
+    {698, 740}, //f
+    {784, 831}, //g
+    {880, 932}, //a
+    {988, 988}, //b (no sharp)
+    {1047, 1109}, //c,
+    {1175, 1245}, //d,
+    {1319, 1319}, //e, (no sharp)
+    {1397, 1480}, //f,
+    {1568, 1661}, //g,
+    {1760, 1865}, //a,
+    {1976, 1976}, //b, (no sharp)
+    {0, 0}        //rest
+};
 
 TuneManager::TuneManager() {
   Serial.println(F("Initializing TuneManager"));
@@ -42,47 +87,276 @@ TuneManager::TuneManager() {
   root = SD.open("/");
 }
 
-void getNextLine(File file, char nextLine[]) {
-  char inputChar = file.read();
-  byte j = 0;
-  while (inputChar != EOF && inputChar != '\n' && j < MAX_CHAR_PER_LINE-1) {
-    nextLine[j++] = inputChar;    
-    inputChar = file.read();
+int getIntegerFromFileStream(File f, char* previewedChar) {
+  int num = 0;
+  while (48 <= *previewedChar && *previewedChar <= 57) {
+    // Ascii range 48-57 represents digits 0-9
+    num = (num*10) + atoi(previewedChar);
+    *previewedChar = f.read();
   }
-  nextLine[j] = NULL;
+  //Serial.print(F("Found integer: "));
+  //Serial.println(num);
+  return num;
 }
 
-void TuneManager::addNotesToTune(byte numOfNotesToAdd) {
-  char separators[] = " -";
-  char* noteFreq = "";
-  char* noteDur = "";
+void getNextNote(File file, int* freq, int* dur) {
+  while (true) {
+    // Get the next char for next iteration if we haven't already got it
+    // (sometimes we have already 'previewed' a char to check if the note is over or not)
+    while (inputChar == ' ') inputChar = file.read();
+    if (inputChar == EOF) return;
+    
+    // If we are in a 'header section'
+    if (inHeader) {
+      // Check if the char matches a header key
+      // TODO: fill in actions for each header type
+      switch (inputChar) {
+        case 'K':  // Key, also marks the end of the header
+          Serial.println(F("Handling header: K - Key"));
+          // Currently only supports default Key C major
+          // Marks the end of the official header, so scroll forward til endline
+          while (inputChar != '\n' && inputChar != ']') inputChar = file.read();
+          inHeader = false;
+          Serial.println(F("Finished handling header: K - Key"));
+          break;
+        case 'M':  // Meter
+          Serial.println(F("Handling header: M - Meter"));
+          // Remove the expected ':' character
+          inputChar = file.read();
+          if (inputChar != ':') continue; // if the ':' isn't present, there is a formatting error
+          inputChar = file.read(); // move past the ':'
+          while (inputChar == ' ') inputChar = file.read();
+          // Get the value for the meter from the fractional form (ex: 4/4 or 6/8)
+          meterValue = (float)getIntegerFromFileStream(file, &inputChar);
+          if (inputChar == '/') {
+            inputChar = file.read(); // move past the '/'
+            meterValue /= (float)getIntegerFromFileStream(file, &inputChar);
+          }
+          // Calculate the default note length based on the Meter
+          defaultNoteLength = meterValue < 0.75f ? 0.0625f : 0.125f;
+          // Calculate the default note duration based off of our (potentially new) note length
+          // 240000 = 60 (seconds per minute) * 1000 milliseconds per second * 4 beats per whole note
+          defaultNoteDuration = 240000 / defaultNoteDuration;
+          // at this point, defaultNoteDuration is set to 'whole note', so we need to apply our current default note length
+          defaultNoteDuration *= defaultNoteLength;
+          Serial.print(F("New meter value: "));
+          Serial.println(meterValue);
+          Serial.print(F("New default note length: "));
+          Serial.println(defaultNoteLength, 4);
+          Serial.print(F("New default note duration: "));
+          Serial.println(defaultNoteDuration);
+          Serial.println(F("Finished handling header: M - Meter"));
+          break;
+        case 'Q':  // Tempo
+          Serial.println(F("Handling header: Q - Tempo"));
+          // Remove the expected ':' character
+          inputChar = file.read();
+          if (inputChar != ':') continue; // if the ':' isn't present, there is a formatting error
+          inputChar = file.read(); // move past the ':'
+          while (inputChar == ' ') inputChar = file.read();
+          // Get the integer value for the tempo
+          defaultNoteDuration = getIntegerFromFileStream(file, &inputChar);
+          // if a '/' is present, it means that they have specified
+          // which note to assign the tempo to, and we must make calculations
+          // based on this assumption
+          if (inputChar == '/') {
+            // Overall calculation:
+            // Note length = [first int] / [second int]
+            // Seconds per whole note beat = 4 * (60 / [Tempo])
+            // Milliseconds per whole note = [seconds per beat] * 1000;
+            // Final default note duration = [note length] * [milliseconds per whole note];
+            // [Note Length] * [Milliseconds per note]
+            defaultNoteDuration /= getIntegerFromFileStream(file, &inputChar);
+            // bypass the filler characters
+            while (inputChar != '=') inputChar = file.read();
+            inputChar = file.read();
+            while (inputChar == ' ') inputChar = file.read();
+            // 240000 = 60 (seconds per minute) * 1000 milliseconds per second * 4 beats per whole note
+            // the next int from the file will be our tempo/bpm for the given note length
+            defaultNoteDuration *= (240000 / getIntegerFromFileStream(file, &inputChar));
+          } else {
+            // If '/' was not present, then they just gave us our tempo
+            // ( we assume it is for the default note length )
+            // 240000 = 60 (seconds per minute) * 1000 milliseconds per second * 4 beats per whole note
+            defaultNoteDuration = 240000 / defaultNoteDuration;
+            // at this point, defaultNoteDuration is set to 'whole note', so we need to apply our current default note length
+            defaultNoteDuration *= defaultNoteLength;
+          }
+          Serial.print(F("New default note duration: "));
+          Serial.println(defaultNoteDuration);
+          Serial.println(F("Finished handling header: Q - Tempo"));
+          break;
+        case 'L':  // Default Note Length
+          Serial.println(F("Handling header: L - Note Length"));
+          // Remove the expected ':' character
+          inputChar = file.read();
+          if (inputChar != ':') continue;
+          else while (inputChar == ' ') inputChar = file.read();
+          // Undo our default tempo
+          defaultNoteDuration /= defaultNoteLength;
+          // Get the value for the length from the fractional form (ex: 4/4)
+          defaultNoteLength = getIntegerFromFileStream(file, &inputChar);
+          if (inputChar == '/') {
+            defaultNoteLength /= getIntegerFromFileStream(file, &inputChar);
+          }
+          // Reapply the (potentially new) note length to the tempo
+          defaultNoteDuration *= defaultNoteLength;
+          Serial.print(F("New default note length: "));
+          Serial.println(defaultNoteLength, 4);
+          Serial.println(F("Finished handling header: L - Note Length"));
+          break;
+        case ']':
+          inHeader = false;
+          Serial.println(F("Finished handlings all headers"));
+          break;
+      }
+      // Make sure we allow the next char in file to be read once we have our header info
+      inputChar = ' ';
+      
+    } else {
+      // Check if we are entering a mid-tune header change
+      if (inputChar == '[') {
+        inHeader = true;
+        inputChar = ' ';
+        Serial.println(F("Starting to handle inline headers"));
+        continue;
+      }
+      
+      // If not, do a series of sequential checks for note information
+      
+      // reset defaults first though
+      sharpIndicator = false;
+      flatIndicator = false;
+      int noteFreqIndex = -1;
+      
+      // Get the sharp/flat modifier (will recognize but pass over doubles)
+      //Serial.println(F("Looking for sharp/flat modifiers"));
+      while (inputChar == '^') {
+        sharpIndicator = true;
+        inputChar = file.read();
+      }
+      while (inputChar == '_') {
+        flatIndicator = true;
+        inputChar = file.read();
+      }
+      
+      // Get the note (CDEFGAB)
+      //Serial.println(F("Looking for note"));
+      if (inputChar == 122) {
+        // if z, map to 28 (rest)
+        noteFreqIndex = 28;
+      } else if (67 <= inputChar && inputChar <= 71) {
+        // If CDEFG, map to 7-11
+        noteFreqIndex = inputChar - 67 + 7;
+      } else if (65 <= inputChar && inputChar <= 66) {
+        // If AB, map to 12-13
+        noteFreqIndex = inputChar - 65 + 12;
+      } else if (99 <= inputChar && inputChar <= 103) {
+        // If cdefg, map to 14-18
+        noteFreqIndex = inputChar - 99 + 14;
+      } else if (97 <= inputChar && inputChar <= 98) {
+        // If ab, map to 19-20
+        noteFreqIndex = inputChar - 97 + 19;
+      }
+      
+      // If, for whatever reason, we still don't have a note, exit with a failure
+      if (noteFreqIndex == -1) {
+        inputChar = ' ';
+        continue;
+      }
+      inputChar = file.read();
+      
+      // Get the octave modifier (skippable)
+      //Serial.println(F("Looking for octave modifiers"));
+      if (inputChar == '\'') {
+        Serial.println(F("Found a ' - going up an octave"));
+        noteFreqIndex += 7;
+        inputChar = file.read();
+      }    
+      if (inputChar == ',') {
+        Serial.println(F("Found a , - going down an octave"));
+        noteFreqIndex -= 7;
+        inputChar = file.read();
+      }
+      
+      // Take our note frequency info and get the actual frequency
+      if (flatIndicator) {
+        // Flats can also become the below notes sharp freq
+        sharpIndicator = true;
+        noteFreqIndex = max(noteFreqIndex-1,0);
+      }
+      *freq = frequencies[noteFreqIndex][sharpIndicator ? 1 : 0];
+      //Serial.print(F("Note Freq: "));
+      //Serial.print(*freq);
+      
+      // Get the beat modifier
+      *dur = defaultNoteDuration;
+      // First see if we can find a multiplier (no preceding chars, just digits)
+      int modifier = getIntegerFromFileStream(file, &inputChar);
+      
+      if (modifier > 0) {
+        // If there was a digit, then it means we multiply our current duration by that number
+        *dur *= modifier;
+      }
+      
+      if (inputChar == '/') {
+        // If a / is found, it means we divide our duration by the next number
+        modifier = getIntegerFromFileStream(file, &inputChar);
+        if (modifier > 0) *dur /= modifier;
+      }
+      
+      if (inputChar == '>') {
+        // A > (aka a hornpipe) represents a 'dotted' note
+        // (therefore adds half its current duration to itself)
+        *dur += *dur/2;
+        inputChar = ' ';
+      }
+      
+      //Serial.print(F("Note Dur: "));
+      //Serial.print(*dur);
+      
+      // Make sure to return once we have our next valid note
+      return;
+    }
+  }
+}
+
+void TuneManager::addNotesToTune(int numOfNotesToAdd) {
+  //Serial.print(F("Adding notes to tune: "));
+  //Serial.println(numOfNotesToAdd);
+  //Serial.print(F("Maximum buffer capacity: "));
+  //Serial.println(MAX_NOTE_BUFFER);
   for (int i=0; i<numOfNotesToAdd; i++) {
     // Immediately abort loading more notes if we have run out of space in the buffer
-    if ((writeNoteIndex+1)%MAX_NOTE_BUFFER == readNoteIndex) return;
+    if ((writeNoteIndex+1)%MAX_NOTE_BUFFER == readNoteIndex) {
+      //Serial.print(F("Reached maximum buffer capacity, aborting adding new notes: "));
+      //Serial.println(MAX_NOTE_BUFFER);
+      return;
+    }
     
     // Get the next freq and duration
     if (tuneFile.available()) {
       // Get our next note from the file
-      char nextLine[MAX_CHAR_PER_LINE];
-      getNextLine(tuneFile, nextLine);
+      int nextNoteFreq = 0;
+      int nextNoteDur = 0;
+      // keep asking for the next note until it returns a 'success'
+      getNextNote(tuneFile, &nextNoteFreq, &nextNoteDur);
       
-      // Decode the note
-      noteFreq = strtok(nextLine, separators);
-      noteDur = strtok(NULL, separators);
-      if (noteFreq != NULL && noteDur != NULL) {
+      // Check to make sure that we have a note (in case it reached end of file)
+      if (nextNoteDur != 0) {
         // Otherwise, add our decoded note to the ongoing tune
-        tuneFreq[writeNoteIndex] = atoi(noteFreq);
-        tuneDur[writeNoteIndex] = atoi(noteDur);
+        tuneFreq[writeNoteIndex] = nextNoteFreq;
+        tuneDur[writeNoteIndex] = nextNoteDur;
         // Increment the index of where we are writing our notes
         writeNoteIndex = (writeNoteIndex+1)%MAX_NOTE_BUFFER;
-      }
-    } else {
-      // If we have reached the end of the song, the file will no longer be available
-      // Close it and return it to null so that a new tune file can be played
-      Serial.println(F("Reached end of tune, closing file"));
-      tuneFile.close();
-      break;
-    }
+        continue;
+      } 
+    } 
+    // If we have reached the end of the song, the file will no longer be available
+    // Close it and return it to null so that a new tune file can be played
+    Serial.println(F("Reached end of tune, closing file"));
+    tuneFile.close();
+    break;
   }
 }
 
@@ -98,14 +372,20 @@ void TuneManager::playTunes() {
   // Make sure we have a song to play
   if (!tuneFile) {
     // Proceed to the next song if it exists
+    Serial.println(F("opening next file"));
     tuneFile = root.openNextFile();
-    // If we've reached the end, then just stop for now
-    if (!tuneFile) return;
-    Serial.print(F("Loaded next tune file: "));
-    Serial.println(tuneFile.name());
-    addNotesToTune(MAX_NOTE_BUFFER);
+    // If we got a new tune, load up some notes from it
+    if (tuneFile) {
+      Serial.print(F("Loaded next tune file: "));
+      Serial.println(tuneFile.name());
+      // Reset all data to default for new tune
+      inHeader = true;
+      inputChar = ' ';
+      sharpIndicator = false;
+      flatIndicator = false;
+      addNotesToTune(MAX_NOTE_BUFFER);
+    }
   }
-  
   // play the song by iterating over the notes at given intervals:
   unsigned long currentMillis = millis();
   if (readNoteIndex != writeNoteIndex && (currentMillis - previousMillis > interval) ) {

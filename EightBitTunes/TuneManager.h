@@ -22,7 +22,7 @@ class TuneManager {
     int tuneFreq[MAX_NOTE_BUFFER];
     int tuneDur[MAX_NOTE_BUFFER];
     char** sounds;
-    void addNotesToTune(byte numOfNotesToAdd);
+    void addNotesToTune(int numOfNotesToAdd);
 };
 
 #endif
