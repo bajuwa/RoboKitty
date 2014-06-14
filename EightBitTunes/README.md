@@ -12,6 +12,7 @@ To be more specific, this library currently supports:<br>
         - M - Meter (default: 4/4)<br>
         - L - Note Length (default: 1/8)<br>
         - Q - Tempo (default: 120)<br>
+
 This library IGNORES:<br>
 - The K - Key Header, currently this library defaults to C Major Key<br>
 - Repeat symbols ( :| )<br>
@@ -19,5 +20,6 @@ This library IGNORES:<br>
 - Doubled up flats/sharps, these will default to single flats/sharps respectively (ex: ^^A will be interpretted as ^A)<br>
 - Anything inside double quotes (")<br>
 - Any whitespace or decorative characters (such as bars |, parenthesis (), newlines, etc)<br>
+
 This library will break/error or display undefined behaviour if:<br>
 - The K - Key Header is not the last header (either in the initial header set or the mid-tune header changes)<br>
