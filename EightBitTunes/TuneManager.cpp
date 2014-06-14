@@ -24,7 +24,7 @@ unsigned long previousMillis = 0;
 unsigned long interval = 0;
 
 // ABC Notation
-boolean inBrackets = true;
+boolean inBrackets = false;
 boolean sharpIndicator = false;
 boolean flatIndicator = false;
 float meterValue = 1.0f;
@@ -115,6 +115,26 @@ void getNextNote(File file, int* freq, int* dur) {
     
     // If we are in a 'header section'
     switch (inputChar) {
+      // TODO: Ignore all other header lines
+      case 'H':
+      case 'I':
+      case 'J':
+      case 'N':
+      case 'O':
+      case 'P':
+      case 'R':
+      case 'S':
+      case 'T':
+      case 'U':
+      case 'V':
+      case 'W':
+      case 'X':
+      case 'Y':
+      case 'Z':
+      case '%':
+        while (inputChar != '\n') inputChar = file.read();
+        break;
+      // TODO: Fix the tempo issues
       
       case 'K':  // Key, also marks the end of the header
         Serial.println(F("Handling header: K - Key"));
@@ -221,13 +241,19 @@ void getNextNote(File file, int* freq, int* dur) {
         
       case '[':
         inBrackets = true;
-        Serial.println(F("Entering [] Brackets"));
+        //Serial.println(F("Entering [] Brackets"));
+        inputChar = file.read();
+        break;
+        
+      case '|':
+        inBrackets = false;
+        //Serial.println(F("Exiting [] Brackets due to bar |"));
         inputChar = file.read();
         break;
         
       case ']':
         inBrackets = false;
-        Serial.println(F("Exiting [] Brackets"));
+        //Serial.println(F("Exiting [] Brackets"));
         inputChar = file.read();
         break;
       
@@ -279,12 +305,12 @@ void getNextNote(File file, int* freq, int* dur) {
         // Get the octave modifier (skippable)
         //Serial.println(F("Looking for octave modifiers"));
         if (inputChar == '\'') {
-          Serial.println(F("Found a ' - going up an octave"));
+          //Serial.println(F("Found a ' - going up an octave"));
           noteFreqIndex += 7;
           inputChar = file.read();
         }    
         if (inputChar == ',') {
-          Serial.println(F("Found a , - going down an octave"));
+          //Serial.println(F("Found a , - going down an octave"));
           noteFreqIndex -= 7;
           inputChar = file.read();
         }
@@ -332,8 +358,10 @@ void getNextNote(File file, int* freq, int* dur) {
         // play multiple notes at once, which the arduino piezo does not support
         // So we must escape all remaining notes until the end brack
         if (inBrackets) {
-          Serial.println(F("Ignoring rest of notes in stem..."));
-          while (inputChar != ']') inputChar = file.read();
+          //Serial.println(F("Ignoring rest of notes in stem..."));
+          while (inputChar != ']') {
+            inputChar = file.read();
+          }
         }
         
         // Make sure to return once we have our next valid note
@@ -400,7 +428,7 @@ void TuneManager::playTunes() {
       Serial.print(F("Loaded next tune file: "));
       Serial.println(tuneFile.name());
       // Reset all data to default for new tune
-      inBrackets = true;
+      inBrackets = false;
       inputChar = ' ';
       sharpIndicator = false;
       flatIndicator = false;
@@ -420,6 +448,13 @@ void TuneManager::playTunes() {
     // (namely the length of the currently playing note plus some rest time to distinguish between repeated notes)
     interval = tuneDur[readNoteIndex];
     
+    // Also, if the two notes are the same frequency, we need to manually
+    // add a small break between the notes so they don't blend together
+    if (tuneFreq[(readNoteIndex+1)%MAX_NOTE_BUFFER] == tuneFreq[readNoteIndex]) {
+      // Add 10 milliseconds to the notes interval to create a 10 ms 'rest'
+      interval += 10;
+    }
+      
     // Remove the note we just played so it doesn't repeat
     readNoteIndex = (readNoteIndex+1)%MAX_NOTE_BUFFER;
   } else {

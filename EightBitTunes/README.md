@@ -16,7 +16,7 @@ This library IGNORES:<br>
 - The K - Key Header, currently this library defaults to C Major Key<br>
 - Repeat symbols ( :| )<br>
 - Any stemmed notes, except for the first note in the bracketed stem (ex: in the simple stem [ABC], only A would play, B and C would be ignored)<br>
-- Doubled up flats/sharps, these will default to <br>
+- Doubled up flats/sharps, these will default to single flats/sharps respectively (ex: ^^A will be interpretted as ^A)<br>
 - Anything inside double quotes (")<br>
 - Any whitespace or decorative characters (such as bars |, parenthesis (), newlines, etc)<br>
 This library will break/error or display undefined behaviour if:<br>
