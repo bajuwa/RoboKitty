@@ -23,3 +23,5 @@ This library IGNORES:<br>
 
 This library will break/error or display undefined behaviour if:<br>
 - The K - Key Header is not the last header (either in the initial header set or the mid-tune header changes)<br>
+
+Note: This library is still in development and is potentially unstable.  Some known bugs include incorrect tempo parsing and some undefined behaviours with certain extra characters.
