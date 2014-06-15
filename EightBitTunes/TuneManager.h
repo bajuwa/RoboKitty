@@ -3,26 +3,24 @@
 
 #include "Arduino.h"
 
+
+// HARDWARE CONSTANTS
+// pin of speaker/pezo
+static const int PIN_PEZO = 8;
+static const int PIN_CS = 4;
+static const int PIN_HARDWARE_SS = 10;
+
+// Buffer Constants
 static const int MIN_NOTE_BUFFER = 15;
 static const int MAX_NOTE_BUFFER = 100;
 
-typedef enum {
-  HAPPY,
-  SAD,
-  PANIC,
-  BORED
-} SOUNDS;
-    
 class TuneManager {
   public:
     TuneManager(); 
     void playTunes();
-    void loadSound(SOUNDS sound);
   private:
-    int tuneFreq[MAX_NOTE_BUFFER];
-    int tuneDur[MAX_NOTE_BUFFER];
-    char** sounds;
-    void addNotesToTune(int numOfNotesToAdd);
+    void addNotesToTune(Stream* str, int numOfNotesToAdd);
+    void ensureFile(File* file, File* rootToLoadFrom);
 };
 
 #endif
