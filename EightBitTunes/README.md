@@ -2,6 +2,9 @@ TuneManager
 ===========
 
 A C++ library for Arduino that uses ABC Notation to read music information from an SD Card and play it to a piezo.<br>
+For more information on the ABC Notation: http://abcnotation.com/<br>
+You can search their large database of ABC Notated songs here: http://abcnotation.com/search<br>
+Many more songs can be found outside of this website, just google phrases such as "[song name] abc notation"!<br>
 
 This library does not fully support ABC Notation, it only supports what is needed from the notation to play a basic (one note at a time) 8bit song.<br>
 
