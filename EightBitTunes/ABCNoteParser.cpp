@@ -64,10 +64,14 @@ void ABCNoteParser::getNextNote(Stream* str, int* freq, int* dur) {
     skipCharacters(str, &inputChar, " ");
     // If we reached the end of the str, abort finding the next note
     if (inputChar == EOF) return;
-    // If we find double quotes, "escape" what is inside them
+    // If we find double quotes or +, "escape" what is inside them
     if (inputChar == '"') {
       inputChar = str->read();
       skipCharactersUntil(str, &inputChar, "\"");
+    }
+    if (inputChar == '+') {
+      inputChar = str->read();
+      skipCharactersUntil(str, &inputChar, "+");
     }
     
     // If we are in a 'header section'

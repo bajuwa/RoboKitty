@@ -122,8 +122,8 @@ void TuneManager::playTunes() {
     // Remove the note we just played so it doesn't repeat
     readNoteIndex = (readNoteIndex+1)%MAX_NOTE_BUFFER;
   } else {
-     // If we can't play a note yet, might as well buffer some of the upcoming notes
-     //Serial.println("Not playing a note, so add to buffer");
-     addNotesToTune(&tuneFile, MIN_NOTE_BUFFER);
+    // If we can't play a note yet, might as well buffer some of the upcoming notes
+    //Serial.println("Not playing a note, so add to buffer");
+    addNotesToTune(&tuneFile, MIN_NOTE_BUFFER);
   } 
 }
