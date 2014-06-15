@@ -29,7 +29,8 @@ boolean sharpIndicator = false;
 boolean flatIndicator = false;
 float meterValue = 1.0f;
 float defaultNoteLength = 0.125f;
-long defaultNoteDuration = 120;
+long beatsPerMinute = 120;
+long defaultNoteDuration;
 
 // Extra information about ABC Notation:
 // Middle C is represented as C 
@@ -99,6 +100,10 @@ int getIntegerFromFileStream(File f, char* previewedChar) {
   return num;
 }
 
+double delayTimeInMilliseconds(double noteLength, float bpm) {
+  return 240000 * noteLength / bpm;
+}
+
 void getNextNote(File file, int* freq, int* dur) {
   while (true) {
     // Get the next char for next iteration if we haven't already got it
@@ -141,7 +146,18 @@ void getNextNote(File file, int* freq, int* dur) {
         // Currently only supports default Key C major
         // Marks the end of the official header, so scroll forward til endline
         while (inputChar != '\n' && inputChar != ']') inputChar = file.read();
+        
+        Serial.println(F("Final Settings: "));
+        Serial.print(F("Meter: "));
+        Serial.println(meterValue);
+        Serial.print(F("Note Length: "));
+        Serial.println(defaultNoteLength, 4);
+        Serial.print(F("BPM: "));
+        Serial.println(beatsPerMinute);
+        Serial.print(F("Note Duration: "));
+        Serial.println(defaultNoteDuration);
         Serial.println(F("Finished handling header: K - Key"));
+        
         break;
       
       case 'M':  // Meter
@@ -160,17 +176,7 @@ void getNextNote(File file, int* freq, int* dur) {
         // Calculate the default note length based on the Meter
         defaultNoteLength = meterValue < 0.75f ? 0.0625f : 0.125f;
         // Calculate the default note duration based off of our (potentially new) note length
-        // 240000 = 60 (seconds per minute) * 1000 milliseconds per second * 4 beats per whole note
-        defaultNoteDuration = 240000 / defaultNoteDuration;
-        // at this point, defaultNoteDuration is set to 'whole note', so we need to apply our current default note length
-        defaultNoteDuration *= defaultNoteLength;
-        Serial.print(F("New meter value: "));
-        Serial.println(meterValue);
-        Serial.print(F("New default note length: "));
-        Serial.println(defaultNoteLength, 4);
-        Serial.print(F("New default note duration: "));
-        Serial.println(defaultNoteDuration);
-        Serial.println(F("Finished handling header: M - Meter"));
+        defaultNoteDuration = delayTimeInMilliseconds(defaultNoteLength, beatsPerMinute);
         break;
       
       case 'Q':  // Tempo
@@ -187,33 +193,21 @@ void getNextNote(File file, int* freq, int* dur) {
         // based on this assumption
         if (inputChar == '/') {
           inputChar = file.read();
-          // Overall calculation:
-          // Note length = [first int] / [second int]
-          // Seconds per whole note beat = 4 * (60 / [Tempo])
-          // Milliseconds per whole note = [seconds per beat] * 1000;
-          // Final default note duration = [note length] * [milliseconds per whole note];
-          // [Note Length] * [Milliseconds per note]
           double tempoNoteLength = (double)defaultNoteDuration / (double)getIntegerFromFileStream(file, &inputChar);
-          Serial.print(F("Tempo: Note Length: "));
-          Serial.println(tempoNoteLength, 4);
           // bypass the filler characters
           while (inputChar != '=') inputChar = file.read();
           inputChar = file.read();
           while (inputChar == ' ') inputChar = file.read();
-          // the next int from the file will be our tempo/bpm for the given note length
-          defaultNoteDuration = tempoNoteLength * (120000 / getIntegerFromFileStream(file, &inputChar));
-          Serial.print(F("Tempo: default note duration: "));
-          Serial.println(defaultNoteDuration);
+          // the next int from the file will be our bpm for the given note length
+          beatsPerMinute = getIntegerFromFileStream(file, &inputChar);
+          // Calculate the default note duration based off of our (potentially new) bpm
+          defaultNoteDuration = delayTimeInMilliseconds(defaultNoteLength, beatsPerMinute);
         } else {
           // If '/' was not present, then they just gave us our tempo
-          // ( we assume it is for the default note length )
-          // 240000 = 60 (seconds per minute) * 1000 milliseconds per second * 4 beats per whole note
-          defaultNoteDuration = 240000 / defaultNoteDuration;
-          // at this point, defaultNoteDuration is set to 'whole note', so we need to apply our current default note length
-          defaultNoteDuration *= (double)defaultNoteLength;
+          beatsPerMinute = defaultNoteDuration;
+          // Calculate the default note duration based off of our bpm
+          defaultNoteDuration = delayTimeInMilliseconds(defaultNoteLength, beatsPerMinute);
         }
-        Serial.print(F("New default note duration: "));
-        Serial.println(defaultNoteDuration);
         Serial.println(F("Finished handling header: Q - Tempo"));
         break;
       
@@ -224,19 +218,14 @@ void getNextNote(File file, int* freq, int* dur) {
         if (inputChar != ':') continue;
         inputChar = file.read();
         while (inputChar == ' ') inputChar = file.read();
-        // Undo our default tempo
-        defaultNoteDuration /= (double)defaultNoteLength;
         // Get the value for the length from the fractional form (ex: 4/4)
         defaultNoteLength = (float)getIntegerFromFileStream(file, &inputChar);
         if (inputChar == '/') {
           inputChar = file.read();
           defaultNoteLength /= (float)getIntegerFromFileStream(file, &inputChar);
         }
-        // Reapply the (potentially new) note length to the tempo
-        defaultNoteDuration *= (double)defaultNoteLength;
-        Serial.print(F("New default note length: "));
-        Serial.println(defaultNoteLength, 4);
-        Serial.println(F("Finished handling header: L - Note Length"));
+        // Calculate the default note duration based off of our (potentially new) note length
+        defaultNoteDuration = delayTimeInMilliseconds(defaultNoteLength, beatsPerMinute);
         break;
         
       case '[':
@@ -396,6 +385,7 @@ void TuneManager::addNotesToTune(int numOfNotesToAdd) {
         // Otherwise, add our decoded note to the ongoing tune
         tuneFreq[writeNoteIndex] = nextNoteFreq;
         tuneDur[writeNoteIndex] = nextNoteDur;
+        
         // Increment the index of where we are writing our notes
         writeNoteIndex = (writeNoteIndex+1)%MAX_NOTE_BUFFER;
         continue;
@@ -440,21 +430,20 @@ void TuneManager::playTunes() {
   if (readNoteIndex != writeNoteIndex && (currentMillis - previousMillis > interval) ) {
     previousMillis = currentMillis;   
   
-    // If the current note isn't a 'rest' beat, 
-    // then play the note for the alloted duration (milliseconds)
-    tone(PIN_PEZO, tuneFreq[readNoteIndex], tuneDur[readNoteIndex]);
+    // Before playing, if this and the next notes are the same frequency, we need to manually
+    // add a small break between the notes so they don't blend together
+    int tempDur = tuneDur[readNoteIndex];
+    if (tuneFreq[(readNoteIndex+1)%MAX_NOTE_BUFFER] == tuneFreq[readNoteIndex]) {
+      // Remove some milliseconds to the notes interval to create a short 'rest'
+      tempDur -= 10;
+    }
+  
+    // Play the note  
+    tone(PIN_PEZO, tuneFreq[readNoteIndex], tempDur);
     
     // Set how long to wait until next note 
-    // (namely the length of the currently playing note plus some rest time to distinguish between repeated notes)
     interval = tuneDur[readNoteIndex];
-    
-    // Also, if the two notes are the same frequency, we need to manually
-    // add a small break between the notes so they don't blend together
-    if (tuneFreq[(readNoteIndex+1)%MAX_NOTE_BUFFER] == tuneFreq[readNoteIndex]) {
-      // Add 10 milliseconds to the notes interval to create a 10 ms 'rest'
-      interval += 10;
-    }
-      
+     
     // Remove the note we just played so it doesn't repeat
     readNoteIndex = (readNoteIndex+1)%MAX_NOTE_BUFFER;
   } else {
