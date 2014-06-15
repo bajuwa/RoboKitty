@@ -18,7 +18,7 @@ int tuneDur[MAX_NOTE_BUFFER];
 unsigned long previousMillis = 0;
 unsigned long interval = 0;
 
-TuneManager::TuneManager() {
+TuneManager::TuneManager(char tuneFolderPath[]) {
   Serial.println(F("Initializing TuneManager"));
   previousMillis = millis();
   abcParser = new ABCNoteParser();
@@ -36,7 +36,7 @@ TuneManager::TuneManager() {
   }
   
   // Open the root folder so we can rely on 'openNextFile' for our playlist 'shuffle'
-  root = SD.open("/");
+  root = SD.open(tuneFolderPath);
 }
 
 void TuneManager::addNotesToTune(Stream* str, int numOfNotesToAdd) {
