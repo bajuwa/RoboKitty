@@ -9,8 +9,8 @@ File root;
 
 // Buffered note storage/parsing
 ABCNoteParser* abcParser;
-int readNoteIndex = 0;
-int writeNoteIndex = 0;
+byte readNoteIndex = 0;
+byte writeNoteIndex = 0;
 int tuneFreq[MAX_NOTE_BUFFER];
 int tuneDur[MAX_NOTE_BUFFER];
 
@@ -29,18 +29,18 @@ TuneManager::TuneManager(char tuneFolderPath[]) {
   // or the SD library functions will not work.
   pinMode(PIN_HARDWARE_SS, OUTPUT);
   
-  if (!SD.begin(PIN_CS)) {
-    Serial.println(F("SD Card Initialization Failed"));
-  } else {
+  if (SD.begin(PIN_CS)) {
     Serial.println(F("SD Card Initialized Successfully"));
+  } else {
+    Serial.println(F("SD Card Initialization Failed"));
   }
   
   // Open the root folder so we can rely on 'openNextFile' for our playlist 'shuffle'
   root = SD.open(tuneFolderPath);
 }
 
-void TuneManager::addNotesToTune(Stream* str, int numOfNotesToAdd) {
-  for (int i=0; i<numOfNotesToAdd; i++) {
+void TuneManager::addNotesToTune(Stream* str, byte numOfNotesToAdd) {
+  for (byte i=0; i<numOfNotesToAdd; i++) {
     // Immediately abort loading more notes if we have run out of space in the buffer
     if ((writeNoteIndex+1)%MAX_NOTE_BUFFER == readNoteIndex) return;
     
